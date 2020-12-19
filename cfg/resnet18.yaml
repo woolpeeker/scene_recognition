@@ -1,0 +1,21 @@
+model:
+  input_size: 224
+  net_name: ResNet18
+  net_build_args:
+    num_classes: 13
+    pretrain: data/pretrain/resnet18-5c106cde.pth
+  net_forward_args: null
+  preprocess: ImageNet
+  # train
+  loss_alpha: 0.4
+  lr: 0.01
+  lr_decays: [0.1, 1, 0.2, 0.4]
+  lr_decays_epochs: [1, 5, 10]
+  batch_size: 128
+  num_workers: 6
+
+ckpt: checkpoints/resnet18
+gpus: [0]
+max_epochs: 100
+max_steps: null
+

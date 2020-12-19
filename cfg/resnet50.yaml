@@ -1,0 +1,20 @@
+model:
+  input_size: 224
+  net_name: ResNet50
+  net_build_args:
+    num_classes: 13
+    pretrain: data/pretrain/resnet50-19c8e357.pth
+  net_forward_args: null
+  preprocess: ImageNet
+  # train
+  loss_alpha: 0.4
+  lr: 0.001
+  lr_decays: [0.1, 1, 0.2, 0.4]
+  lr_decays_epochs: [1, 6, 14]
+  batch_size: 64
+  num_workers: 6
+
+ckpt: checkpoints/resnet50_diy
+gpus: [0,1,2,3]
+max_epochs: 50
+max_steps: null
