@@ -12,11 +12,11 @@ def accuracy(output, target, topk=(1,)):
 
         _, pred = output.topk(maxk, 1, True, True)
         pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
+        correct = pred.eq(target.reshape(1, -1).expand_as(pred))
 
         res = []
         for k in topk:
-            correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+            correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
 
@@ -27,7 +27,7 @@ def accuracy_per_cate(output, target, topk=(1,)):
 
         _, pred = output.topk(maxk, 1, True, True)
         pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
+        correct = pred.eq(target.reshape(1, -1).expand_as(pred))
 
         res = {k: None for k in topk}
         for k in topk:
@@ -35,7 +35,7 @@ def accuracy_per_cate(output, target, topk=(1,)):
             for cate in range(cate_num):
                 cate_idx = torch.nonzero(target == cate, as_tuple=False).reshape([-1])
                 cate_correct = correct[:, cate_idx]
-                correct_k = cate_correct[:k].view(-1).float().sum(0, keepdim=True)
+                correct_k = cate_correct[:k].reshape(-1).float().sum(0, keepdim=True)
                 y = correct_k / cate_idx.size(0) * 100
                 if isinstance(y, torch.Tensor):
                     y = y.item()

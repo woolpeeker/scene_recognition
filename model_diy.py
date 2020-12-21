@@ -12,12 +12,13 @@ import torchvision as tv
 import pytorch_lightning as pl
 from easydict import EasyDict as edict
 
-from dataloader import places_diy
+from dataloader import places_diy_v2, places_diy
 import modules
 from modules import NET_REGISTRY
 
 def build_model(cfg, eval=False):
-    Arch_type = Model
+    Arch_type = ModelV2
+    print(f"Arch_type: {Arch_type}")
     hparams = Arch_type.default_hparams()
     for k, v in cfg.model.items():
         assert k in hparams
@@ -234,3 +235,22 @@ class Model(pl.LightningModule):
     
     def test_epoch_end(self, validation_step_outputs):
         return self.validation_epoch_end(validation_step_outputs)
+
+class ModelV2(Model):
+    def train_dataloader(self):
+        loader = places_diy_v2.get_places_diy_v2_loader(
+            size=self.hparams.input_size,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            mode='train'
+        )
+        return loader
+    
+    def val_dataloader(self):
+        loader = places_diy_v2.get_places_diy_v2_loader(
+            size=self.hparams.input_size,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            mode='eval'
+        )
+        return loader

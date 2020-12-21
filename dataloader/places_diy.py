@@ -9,7 +9,7 @@ import itertools
 from torchvision import transforms as T
 import random
 
-PLACES_ROOT = '/home/luojiapeng/datasets/Places'
+PLACES_ROOT = '/data/luojiapeng/datasets/Places'
 
 def read_labels_txt(txt_path):
     labels = []

@@ -12,10 +12,10 @@ import itertools
 from torchvision import transforms as T
 import random
 
-PLACES_ROOT = '/home/luojiapeng/datasets/Places'
+PLACES_ROOT = '/data/luojiapeng/datasets/Places'
 
 from dataloader.label_cfg_v2 import LABEL_CFG, INOUT_CFG
-from dataloader.places_diy import PlacesDIY, read_labels_txt, get_cato_images, ConcatDataset
+from dataloader.places_diy import read_labels_txt, get_cato_images, ConcatDataset
 
 class PlacesDIY_V2(torch.utils.data.Dataset):
     def __init__(self, label_cfg, mode, img_tfm=None, label_tfm=None, root=PLACES_ROOT):
@@ -29,14 +29,16 @@ class PlacesDIY_V2(torch.utils.data.Dataset):
         self.labelnames = list(label_cfg.keys())
         if mode == 'train':
             images_dir = Path(PLACES_ROOT) / 'data_256'
-            for lname, v in label_cfg:
+            for lname, v in label_cfg.items():
                 for p in v:
                     if isinstance(p, str):
-                        imgs = list((images_dir / p).glob('*.jpg'))
+                        imgs = list((images_dir / p[1:]).glob('*.jpg'))
                     elif isinstance(p, Path):
                         imgs = list((p/'train').glob('*.jpg'))
                     else:
                         raise ValueError("wrong value in label_cfg")
+                    if len(imgs) == 0:
+                        print(f"warning: empty imgs in {p}")
                     self.images.extend(imgs)
                     self.labels.extend([self.labelnames.index(lname)] * len(imgs))
         elif mode == 'eval':
@@ -46,26 +48,27 @@ class PlacesDIY_V2(torch.utils.data.Dataset):
                 keys = line.rstrip().split()
                 if len(keys) != 2:
                     break
-                name = idx2name[int(keys[1])]
-                if name in self.labelnames:
+                _i = int(keys[1])
+                if _i in idx2name:
+                    name = idx2name[_i]
                     self.images.append(self.images_dir / keys[0])
                     self.labels.append(self.labelnames.index(name))
-            for lname, v in label_cfg:
+            for lname, v in label_cfg.items():
                 for p in v:
                     if isinstance(p, Path):
                         imgs = list((p/'val').glob('*.jpg'))
-                    self.images.extend(imgs)
-                    self.labels.extend([self.labelnames.index(lname)] * len(imgs))
+                        self.images.extend(imgs)
+                        self.labels.extend([self.labelnames.index(lname)] * len(imgs))
         elif mode == 'test':
             raise NotImplementedError()
     
     def create_idx2name(self):
-        cname2lname = {cname: lname for lname,cnames in self.label_cfg.items() for cname in cnames}
+        cname2lname = {cname: lname for lname,cnames in self.label_cfg.items() for cname in cnames if isinstance(cname, str)}
         idx2name = {}
         for line in open(Path(PLACES_ROOT) / 'categories_places365.txt').readlines():
             line = line.rstrip()
-            if line:
-                name, idx = line.split()
+            name, idx = line.split()
+            if name in cname2lname:
                 idx2name[int(idx)] = cname2lname[name]
         return idx2name
 
@@ -84,7 +87,8 @@ class PlacesDIY_V2(torch.utils.data.Dataset):
 
 def label_tfm(x):
     return x + 2
-def get_places_diy_loader(mode, size, batch_size, num_workers):
+def get_places_diy_v2_loader(mode, size, batch_size, num_workers):
+    print("get_places_diy_v2_loader")
     MAX_SIZE = 320
     assert size < MAX_SIZE
     if mode == 'train':
@@ -93,8 +97,8 @@ def get_places_diy_loader(mode, size, batch_size, num_workers):
     else:
         transform = T.Compose([T.Resize(size), T.CenterCrop(size), T.ToTensor()])
         shuffle = False
-    label_dataset = PlacesDIY(LABEL_CFG, mode, transform, label_tfm)
-    inout_dataset = PlacesDIY(INOUT_CFG, mode, transform)
+    label_dataset = PlacesDIY_V2(LABEL_CFG, mode, transform, label_tfm)
+    inout_dataset = PlacesDIY_V2(INOUT_CFG, mode, transform)
     dataset = ConcatDataset([label_dataset, inout_dataset], shuffle=shuffle)
     loader = torch.utils.data.DataLoader(
         dataset,

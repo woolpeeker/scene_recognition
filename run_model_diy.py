@@ -6,7 +6,7 @@ import yaml
 from easydict import EasyDict as edict
 from PIL import Image
 import torch.nn.functional as F
-from model_diy import Model, build_model
+from model_diy import build_model
 import torch.onnx
 import torchvision.transforms as T
 import networks, modules
@@ -25,7 +25,7 @@ group.add_argument('--onnx', type=str, help='onnx output path')
 parser.add_argument('--image', '-i', type=str, help='demo input image')
 
 args = parser.parse_args()
-
+args.train = True
 def run_train(args):
     cfg = edict(yaml.load(open(args.cfg), Loader=yaml.Loader))
     model = build_model(cfg, eval=False)

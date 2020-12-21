@@ -1,8 +1,9 @@
+arch_type: ModelV2
 model:
   input_size: 224
   net_name: ResNet18
   net_build_args:
-    num_classes: 13
+    num_classes: 14
     pretrain: data/pretrain/resnet18-5c106cde.pth
   net_forward_args: null
   preprocess: ImageNet
